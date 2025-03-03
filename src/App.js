@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container, Row, Col, Card, Button, Modal, Table, Form } from 'react-bootstrap';
-import { v4 as uuidv4 } from 'uuid'; // You'll need to install this: npm install uuid
+import { v4 as uuidv4 } from 'uuid'; 
 
 function App() {
   const [students, setStudents] = useState([]);
@@ -11,7 +10,9 @@ function App() {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [token, setToken] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    id: '',
     name: '',
     email: '',
     phone: '',
@@ -66,26 +67,40 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-   
-    const newToken = uuidv4();
-    setToken(newToken);
+    if (isEditing) {
+      
+      setStudents(
+        students.map(student => 
+          student.id === formData.id ? formData : student
+        )
+      );
+      setIsEditing(false);
+      setShowSuccessModal(true);
+      setToken(formData.id);
+      console.log('Updated Student with Token:', formData.id);
+    } else {
+      
+      const newToken = uuidv4();
+      setToken(newToken);
+      
+      // Log token to console
+      console.log('Generated Token:', newToken);
+      
+     
+      const newStudent = {
+        ...formData,
+        id: newToken
+      };
+      
+      setStudents([...students, newStudent]);
+      
+      // Show success modal
+      setShowSuccessModal(true);
+    }
     
-    // Log token to console
-    console.log('Generated Token:', newToken);
     
-    // Add new student with token
-    const newStudent = {
-      ...formData,
-      id: newToken
-    };
-    
-    setStudents([...students, newStudent]);
-    
-    // Show success modal
-    setShowSuccessModal(true);
-    
-    // Clear form
     setFormData({
+      id: '',
       name: '',
       email: '',
       phone: '',
@@ -94,7 +109,7 @@ function App() {
       subject: ''
     });
     
-    // Show dashboard after submission
+    
     setShowDashboard(true);
   };
 
@@ -104,7 +119,22 @@ function App() {
 
   const handleEdit = (student) => {
     setFormData(student);
+    setIsEditing(true);
     setShowDashboard(false);
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      id: '',
+      name: '',
+      email: '',
+      phone: '',
+      photo: '',
+      gender: '',
+      subject: ''
+    });
+    setIsEditing(false);
+    setShowDashboard(true);
   };
 
   const handleImagePreview = (photo) => {
@@ -117,7 +147,7 @@ function App() {
       {!showDashboard ? (
         <Card className="shadow-sm">
           <Card.Header className="bg-primary text-white">
-            <h3 className="mb-0">Student Registration Form</h3>
+            <h3 className="mb-0">{isEditing ? 'Edit Student' : 'Student Registration Form'}</h3>
           </Card.Header>
           <Card.Body>
             <Form onSubmit={handleSubmit}>
@@ -235,9 +265,19 @@ function App() {
                 </Row>
               )}
 
-              <div className="d-grid">
-                <Button variant="primary" type="submit" size="lg">
-                  Submit
+              <div className="d-flex justify-content-between">
+                {isEditing && (
+                  <Button variant="secondary" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                )}
+                <Button 
+                  variant="primary" 
+                  type="submit" 
+                  size="lg"
+                  className={isEditing ? "ms-auto" : "w-100"}
+                >
+                  {isEditing ? 'Update' : 'Submit'}
                 </Button>
               </div>
             </Form>
@@ -247,7 +287,19 @@ function App() {
         <div>
           <div className="d-flex justify-content-between mb-4 align-items-center">
             <h2>Student Dashboard</h2>
-            <Button variant="primary" onClick={() => setShowDashboard(false)}>
+            <Button variant="primary" onClick={() => {
+              setIsEditing(false);
+              setFormData({
+                id: '',
+                name: '',
+                email: '',
+                phone: '',
+                photo: '',
+                gender: '',
+                subject: ''
+              });
+              setShowDashboard(false);
+            }}>
               Add New Student
             </Button>
           </div>
@@ -309,13 +361,13 @@ function App() {
      
       <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
         <Modal.Header closeButton className="bg-success text-white">
-          <Modal.Title>Success</Modal.Title>
+          <Modal.Title>{isEditing ? 'Update Successful' : 'Registration Successful'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className="text-center">
             <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
-            <h4 className="mt-3">Registration Successful!</h4>
-            <p>Student has been registered successfully.</p>
+            <h4 className="mt-3">{isEditing ? 'Student Updated Successfully!' : 'Registration Successful!'}</h4>
+            <p>{isEditing ? 'Student information has been updated.' : 'Student has been registered successfully.'}</p>
             <p><strong>Token:</strong> {token}</p>
           </div>
         </Modal.Body>
@@ -326,7 +378,7 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      {/* Image Preview Modal */}
+      
       <Modal show={showImagePreview} onHide={() => setShowImagePreview(false)} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Photo Preview</Modal.Title>
