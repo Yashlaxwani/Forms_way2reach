@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container, Row, Col, Card, Button, Modal, Table, Form } from 'react-bootstrap';
@@ -68,7 +69,7 @@ function App() {
     e.preventDefault();
     
     if (isEditing) {
-      
+    
       setStudents(
         students.map(student => 
           student.id === formData.id ? formData : student
@@ -79,14 +80,13 @@ function App() {
       setToken(formData.id);
       console.log('Updated Student with Token:', formData.id);
     } else {
-      
+    
       const newToken = uuidv4();
       setToken(newToken);
-      
-      // Log token to console
+   
       console.log('Generated Token:', newToken);
       
-     
+   
       const newStudent = {
         ...formData,
         id: newToken
@@ -94,7 +94,7 @@ function App() {
       
       setStudents([...students, newStudent]);
       
-      // Show success modal
+      
       setShowSuccessModal(true);
     }
     
@@ -109,7 +109,7 @@ function App() {
       subject: ''
     });
     
-    
+    // Show dashboard after submission
     setShowDashboard(true);
   };
 
@@ -142,12 +142,33 @@ function App() {
     setShowImagePreview(true);
   };
 
+  const resetForm = () => {
+    setFormData({
+      id: '',
+      name: '',
+      email: '',
+      phone: '',
+      photo: '',
+      gender: '',
+      subject: ''
+    });
+    setIsEditing(false);
+  };
+
   return (
     <Container className="py-5">
       {!showDashboard ? (
         <Card className="shadow-sm">
-          <Card.Header className="bg-primary text-white">
+          <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
             <h3 className="mb-0">{isEditing ? 'Edit Student' : 'Student Registration Form'}</h3>
+            <Button 
+              variant="light" 
+              size="sm" 
+              onClick={() => setShowDashboard(true)}
+              disabled={students.length === 0}
+            >
+              View Dashboard
+            </Button>
           </Card.Header>
           <Card.Body>
             <Form onSubmit={handleSubmit}>
@@ -266,19 +287,20 @@ function App() {
               )}
 
               <div className="d-flex justify-content-between">
-                {isEditing && (
-                  <Button variant="secondary" onClick={handleCancel}>
-                    Cancel
+                {isEditing ? (
+                  <>
+                    <Button variant="secondary" onClick={handleCancel}>
+                      Cancel
+                    </Button>
+                    <Button variant="primary" type="submit">
+                      Update
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="primary" type="submit" className="w-100">
+                    Submit
                   </Button>
                 )}
-                <Button 
-                  variant="primary" 
-                  type="submit" 
-                  size="lg"
-                  className={isEditing ? "ms-auto" : "w-100"}
-                >
-                  {isEditing ? 'Update' : 'Submit'}
-                </Button>
               </div>
             </Form>
           </Card.Body>
@@ -288,16 +310,7 @@ function App() {
           <div className="d-flex justify-content-between mb-4 align-items-center">
             <h2>Student Dashboard</h2>
             <Button variant="primary" onClick={() => {
-              setIsEditing(false);
-              setFormData({
-                id: '',
-                name: '',
-                email: '',
-                phone: '',
-                photo: '',
-                gender: '',
-                subject: ''
-              });
+              resetForm();
               setShowDashboard(false);
             }}>
               Add New Student
@@ -358,7 +371,7 @@ function App() {
         </div>
       )}
 
-     
+      {/* Success Modal */}
       <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
         <Modal.Header closeButton className="bg-success text-white">
           <Modal.Title>{isEditing ? 'Update Successful' : 'Registration Successful'}</Modal.Title>
@@ -378,7 +391,7 @@ function App() {
         </Modal.Footer>
       </Modal>
 
-      
+      {/* Image Preview Modal */}
       <Modal show={showImagePreview} onHide={() => setShowImagePreview(false)} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Photo Preview</Modal.Title>
